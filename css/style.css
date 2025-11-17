@@ -1,0 +1,53 @@
+/*Basic resent - this removes inconcistent browser default styles*/
+* {
+  margin: 0;
+  padding: 0;
+  /*this makes width/height include padding/border.*/
+  box-sizing: border-box;
+}
+
+/*CSS variables - can be used everywhere*/
+:root {
+  /*Colors*/
+  --color-primary: #8b4513;
+  --color-secondary: #f5deb3;
+  /*Spacing*/
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+}
+
+/*Using the variables with var()*/
+#game-board {
+  background: var(--color-primary);
+  padding: var(--spacing-md);
+}
+#container {
+  max-width: 1200px;
+  margin: 0 auto; /*centers the content*/
+  padding: var(--spacing-md);
+}
+
+#container {
+  display: flex;
+  justify-content: center;
+}
+
+/*Responsive Design*/
+/*Mobile First*/
+#game-board {
+  width: 100%;
+  max-width: 500px; /*limits size on larger screens.*/
+}
+/*Tablet and up screens*/
+@media (min-width: 768px) {
+  #game-board {
+    max-width: 600px;
+  }
+}
+
+/* Visible focus indicators */
+button:focus,
+.square:focus {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+}
