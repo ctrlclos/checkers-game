@@ -108,7 +108,6 @@ const renderTurnIndicator = () => {
 // extracts row and col for clicked square
 const handleGameBoardClick = (event) => {
   if(gameOver) return;
-
   let clickedSquare = (event.target);
 
   if(clickedSquare.classList.contains('piece')) {
@@ -117,7 +116,6 @@ const handleGameBoardClick = (event) => {
   if(isValidCell(clickedSquare)){
     selectPiece(clickedSquare);
   }
-
 }
 const selectPiece = (clickedSquare) => {
   if(clickedSquare === null || clickedSquare === undefined) {
@@ -169,6 +167,7 @@ const toggleHighlight = ((selectedPiece) => {
   if(selectedPiece.row === null || selectedPiece.col === null) {return;}
     const pieceElement = document.querySelector(`.piece[data-row="${selectedPiece.row}"][data-col="${selectedPiece.col}"]`)
     if(pieceElement) {
+      console.log(getValidMoves(selectedPiece.row, selectedPiece.col))
       pieceElement.classList.toggle('selected-piece')
       return;
     }
@@ -179,7 +178,6 @@ const isValidCell = (element) => {
   return element && element.classList.contains('cell');
 }
 
-
 // displays error message with timeout (auto-disappearing messages)
 const showErrorMessage = (message, duration = 3000) => {
   errorMessage.innerText = message;
@@ -189,8 +187,91 @@ const showErrorMessage = (message, duration = 3000) => {
 }
 // checks if square is empty
 const isSquareEmpty = (row, col) => {
+  console.log(row, col)
+  console.log(board[row][col] === 0)
   return board[row][col] === 0;
 }
+
+//simple movement - no jump
+
+const getValidMoves = (row, col) => {
+  let validMoves = [];
+  let rightMove = checkRight(row, col);
+  let leftMove = checkLeft(row, col);
+  //player 1 -> moves up
+  //player 2 -> moves down
+  if (rightMove) validMoves.push(rightMove)
+  if (leftMove) validMoves.push(leftMove)
+
+  return validMoves;
+}
+
+const checkRight = (row, col) => {
+  let newRow;
+  let newCol;
+  //player 1 -> check up right
+  if(getPieceOwner(row, col) === 1) {
+    newRow = row - 1 //getting adjacent row
+    newCol = col + 1 //getting adjacent col
+    console.log(newRow, newCol)
+  if(isRowAndColValid(newRow, newCol)) {
+  if(isSquareEmpty(newRow, newCol)) {
+      return [newRow, newCol];
+    }
+  }
+  return null;
+  }else if(getPieceOwner(row, col) === 2) { // player 2 -> check down right
+    newRow = row + 1;
+    newCol = col + 1;
+    if(isRowAndColValid(newRow, newCol)) {
+      if(isSquareEmpty(newRow, newRow)) {
+        return [newRow, newCol]
+      }
+    }
+    return null;
+  }
+}
+
+const checkLeft = (row, col) => {
+  let newRow;
+  let newCol;
+  if(getPieceOwner(row, col) === 1) {
+    newRow = row - 1;
+    newCol = col - 1;
+    if(isRowAndColValid(newRow, newCol)) {
+      if(isSquareEmpty(newRow, newCol)) {
+        return [newRow, newCol];
+      }
+    }
+    return null;
+  } else if(getPieceOwner(row, col) === 2) {
+    newRow = row+1;
+    newCol = col - 1;
+    if(isRowAndColValid(newRow, newCol)) {
+      if(isSquareEmpty(newRow, newCol)) {
+        return [newRow, newCol]
+      }
+    }
+    return null;
+  }
+}
+
+const getPieceOwner = (row, col) => {
+  if(board[row][col] === 1) {
+    return 1;
+  } else if(board[row][col] === 2) {
+    return 2;
+  }
+}
+
+const isRowAndColValid = (row, col) => {
+  if(row >= 0 && row <= 7 && col >= 0 && col <= 7) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 //Event listeners
 gameBoard.addEventListener("click", handleGameBoardClick)
