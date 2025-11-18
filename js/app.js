@@ -196,64 +196,47 @@ const isSquareEmpty = (row, col) => {
 
 const getValidMoves = (row, col) => {
   let validMoves = [];
-  let rightMove = checkRight(row, col);
-  let leftMove = checkLeft(row, col);
-  //player 1 -> moves up
-  //player 2 -> moves down
-  if (rightMove) validMoves.push(rightMove)
-  if (leftMove) validMoves.push(leftMove)
-
-  return validMoves;
+  let directions = [];
+  let result;
+  if(!isRowAndColValid(row, col)) { return []; } // no valid moves
+    if(getPieceOwner(row, col) === 1) {
+        directions = [
+        [-1, -1],  // up-left
+        [-1, +1]   // up-right
+      ]
+      directions.forEach((direction) => {
+        result = getValidDiagonalSquare(row, col, direction[0], direction[1])
+        if(result!==null) {
+          validMoves.push(result)
+        }
+      })
+    }
+    else if(getPieceOwner(row, col) === 2) {
+      directions = [
+        [+1, -1],  // down-left
+        [+1, +1]   // down-right
+      ]
+      directions.forEach((direction) => {
+        result = getValidDiagonalSquare(row, col, direction[0], direction[1])
+        if(result!==null) {
+          validMoves.push(result)
+        }
+      })
+    }
+    return validMoves;
 }
 
-const checkRight = (row, col) => {
-  let newRow;
-  let newCol;
-  //player 1 -> check up right
-  if(getPieceOwner(row, col) === 1) {
-    newRow = row - 1 //getting adjacent row
-    newCol = col + 1 //getting adjacent col
-    console.log(newRow, newCol)
-  if(isRowAndColValid(newRow, newCol)) {
-  if(isSquareEmpty(newRow, newCol)) {
-      return [newRow, newCol];
-    }
-  }
-  return null;
-  }else if(getPieceOwner(row, col) === 2) { // player 2 -> check down right
-    newRow = row + 1;
-    newCol = col + 1;
-    if(isRowAndColValid(newRow, newCol)) {
-      if(isSquareEmpty(newRow, newRow)) {
-        return [newRow, newCol]
-      }
-    }
-    return null;
-  }
-}
 
-const checkLeft = (row, col) => {
-  let newRow;
-  let newCol;
-  if(getPieceOwner(row, col) === 1) {
-    newRow = row - 1;
-    newCol = col - 1;
+//can check any diagonal direction
+const getValidDiagonalSquare = (row, col, rowDelta, colDelta) => {
+  let newRow = row + rowDelta;//getting adjacent row
+  let newCol = col + colDelta;//getting adjacent col
     if(isRowAndColValid(newRow, newCol)) {
       if(isSquareEmpty(newRow, newCol)) {
-        return [newRow, newCol];
+          return [newRow, newCol];
+        }
       }
-    }
     return null;
-  } else if(getPieceOwner(row, col) === 2) {
-    newRow = row+1;
-    newCol = col - 1;
-    if(isRowAndColValid(newRow, newCol)) {
-      if(isSquareEmpty(newRow, newCol)) {
-        return [newRow, newCol]
-      }
-    }
-    return null;
-  }
 }
 
 const getPieceOwner = (row, col) => {
@@ -288,6 +271,8 @@ function init() {
 
   renderTurnIndicator()
 }
+
+
 
 // Call init when the dom is ready
 document.addEventListener('DOMContentLoaded', init);
