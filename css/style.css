@@ -95,6 +95,11 @@ button:focus,
   border: 1px solid rgba(0,0,0,0.1);
 }
 
+.piece.selected-piece {
+  /*box-shadow: 0 0 0 5px #f1c40f;*/
+  box-shadow: 0 0 15px 5px #f1c40f;
+}
+
 .piece.king {
   position: relative;
 }

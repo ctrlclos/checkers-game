@@ -1,5 +1,4 @@
 //Verify JavaScript is loading
-console.log('app.js loaded');
 //Constants
 
 //State variables
@@ -14,14 +13,22 @@ let board = [
   [0, 1, 0, 1, 0, 1, 0, 1],  // Row 6
   [1, 0, 1, 0, 1, 0, 1, 0]   // Row 7
 ]
+
+let currentPlayer = 1; // 1-> player-1, 2 -> player-2
+let selectedPiece = {row: null, col: null};
+let gameOver = false;
+
 //Cached elements references
 const gameBoard = document.getElementById('game-board');
-
-//Event listeners
+const turnIndicator = document.getElementById('player-turn');
+const errorMessage = document.getElementById('error-message');
 
 //Functions
 
 const renderBoard = (gameBoard) => {
+  //Clears existing board cells before rendering (for re-initialization)
+  gameBoard.innerHTML = '';
+
   for(let row = 0; row < 8; row ++) {
     for(let col = 0; col < 8; col++) {
       // Creates a new cell element and sets its row, col, and class values
@@ -93,11 +100,112 @@ const clearBoard = () => {
   })
 }
 
+const renderTurnIndicator = () => {
+  turnIndicator.innerText = `Player ${currentPlayer} turn`;
+}
+
+//identifies which square was clicked
+// extracts row and col for clicked square
+const handleGameBoardClick = (event) => {
+  if(gameOver) return;
+
+  let clickedSquare = (event.target);
+
+  if(clickedSquare.classList.contains('piece')) {
+    clickedSquare = clickedSquare.parentElement;
+  }
+  if(isValidCell(clickedSquare)){
+    selectPiece(clickedSquare);
+  }
+
+}
+const selectPiece = (clickedSquare) => {
+  if(clickedSquare === null || clickedSquare === undefined) {
+    return;
+  }
+  let row = Number(clickedSquare.getAttribute('data-row'));
+  let col = Number(clickedSquare.getAttribute('data-col'));
+
+  errorMessage.innerText = '';
+
+  if(isNaN(row) || isNaN(col)) {
+    errorMessage.innerText = 'row and col are not valid numbers';
+    return;
+  }
+
+  const childSquare = clickedSquare.children[0]
+
+  if(selectedPiece.row === row && selectedPiece.col === col) {
+    toggleHighlight(selectedPiece);
+    selectedPiece = {row: null, col: null};
+    return;
+  }
+  if(selectedPiece.row !== null && selectedPiece.col !== null) {
+    toggleHighlight(selectedPiece);
+  }
+
+  if(childSquare && isPieceClickable(childSquare)) {
+    selectedPiece = {row: row, col: col}
+    toggleHighlight(selectedPiece)
+  } else {
+    if(!childSquare) {
+      showErrorMessage('That square is empty. Please select one of your pieces.')
+    } else if(!isPieceClickable(childSquare)) {
+      showErrorMessage(`That's Player ${currentPlayer === 1 ? '2' : '1'}'s piece. Select your own piece.`);
+    }
+  }
+}
+
+
+const isPieceClickable = (square) => {
+  if(square.classList.contains(`player-${currentPlayer}`)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+const toggleHighlight = ((selectedPiece) => {
+  if(selectedPiece.row === null || selectedPiece.col === null) {return;}
+    const pieceElement = document.querySelector(`.piece[data-row="${selectedPiece.row}"][data-col="${selectedPiece.col}"]`)
+    if(pieceElement) {
+      pieceElement.classList.toggle('selected-piece')
+      return;
+    }
+})
+
+// checks if click target is a valid cell (in case user clicks outside)
+const isValidCell = (element) => {
+  return element && element.classList.contains('cell');
+}
+
+
+// displays error message with timeout (auto-disappearing messages)
+const showErrorMessage = (message, duration = 3000) => {
+  errorMessage.innerText = message;
+  setTimeout(() => {
+    errorMessage.innerText = '';
+  }, duration);
+}
+// checks if square is empty
+const isSquareEmpty = (row, col) => {
+  return board[row][col] === 0;
+}
+
+//Event listeners
+gameBoard.addEventListener("click", handleGameBoardClick)
+
 // init() initializes the game.
 function init() {
+  // sets the inital game state
+  currentPlayer = 1;
+  selectedPiece = {row: null, col: null};
+  gameOver = false;
+
   renderBoard(gameBoard);
   renderPieces();
-  console.log("Checker's game initialized");
+
+  renderTurnIndicator()
 }
 
 // Call init when the dom is ready
