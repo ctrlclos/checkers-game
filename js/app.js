@@ -17,6 +17,7 @@ let board = [
 let currentPlayer = 1; // 1-> player-1, 2 -> player-2
 let selectedPiece = {row: null, col: null};
 let gameOver = false;
+let mandatoryJumps = []; // pieces that must jump
 
 //Cached elements references
 const gameBoard = document.getElementById('game-board');
@@ -101,7 +102,15 @@ const clearBoard = () => {
 }
 
 const renderTurnIndicator = () => {
-  turnIndicator.innerText = `Player ${currentPlayer} turn`;
+  if(mandatoryJumps.length > 0) {
+    turnIndicator.innerText = `Player ${currentPlayer} turn - MUST JUMP!`;
+    turnIndicator.style.color = '#ff6b6b'; //red color
+    turnIndicator.style.fontWeight = 'bold';
+  } else { // resets to default style
+    turnIndicator.innerText = `Player ${currentPlayer} turn`;
+    turnIndicator.style.color = '';
+    turnIndicator.style.fontWeight = '';
+  }
 }
 
 //identifies which square was clicked
@@ -178,6 +187,23 @@ const selectPiece = (clickedSquare) => {
   const childSquare = clickedSquare.children[0]
 
   if(childSquare && isPieceClickable(childSquare)) {
+    //checks for mandatory jumps, if there are -> only allow selecting pieces that can jump
+    if(mandatoryJumps.length > 0) {
+      // Check if this piece is the one that can jump
+      const canThisPieceJump = mandatoryJumps.some((jumpPiece) => {
+        return jumpPiece.row === row && jumpPiece.col === col;
+      });
+
+      if(!canThisPieceJump) {
+        // Selected piece cannot jump, but there is at least one mandatory jump available
+        showErrorMessage(
+          'You must make a jump! Select a piece that can jump.',
+          3000
+        );
+        return false;
+      }
+    }
+    // end mandatory jump check
     selectedPiece = {row: row, col: col}
     return true;
   } else {
@@ -227,7 +253,15 @@ const getValidMoves = (row, col) => {
   if(!isRowAndColValid(row, col)) { return []; } // no valid moves
   const pieceOwner = getPieceOwner(row, col);
   const pieceIsKing = isKing(row, col);
-  // SIMPLE MOVES
+  // JUMP MOVES (check first)
+  // if jumps are available for this piece,ONLY return jumps
+    const jumps = getValidJumps(row, col);
+    // adds jump to valid moves, jump format: [toRow, toCol, captureRow, captureCol]
+    // keeps full format for later use in executeMove
+    if(jumps.length > 0) {
+      return jumps; // return only jumps, skip rest, we will only show jump destinations, simple moves are never highlighted.
+    }
+  // SIMPLE MOVES (only if no jumps available)
   // determines valid directions based on piece type
   if(pieceIsKing) {
     directions = [
@@ -258,18 +292,43 @@ const getValidMoves = (row, col) => {
     }
   })
 
-  //JUMP MOVES
-  // gets all valid jumps for this piece
-  const jumps = getValidJumps(row, col);
-  // adds jump to valid moves, jump format: [toRow, toCol, captureRow, captureCol]
-  // keeps full format for later use in executeMove
-  jumps.forEach((jump) => {
-    validMoves.push(jump);
-  });
-
   return validMoves;
 }
 
+const findAllJumpsForPlayer = (player) => {
+  const piecesWithJumps = [];
+
+  //iterate through entire board
+  for(let row = 0; row < 8; row ++) {
+    for(let col = 0; col < 8; col ++) {
+      const pieceOwner = getPieceOwner(row, col);
+
+      // check if current square has a piece belonging to current player
+      if(pieceOwner === player) {
+        //get all valid jumps for this piece
+        const jumps = getValidJumps(row, col);
+
+        // if this piece has any jumps available, store it
+        if (jumps.length > 0) {
+          piecesWithJumps.push({
+            row: row,
+            col: col,
+            jumps: jumps
+          });
+        }
+      }
+    }
+  }
+  return piecesWithJumps;
+}
+
+const checkMandatoryJumps = () => {
+  mandatoryJumps = findAllJumpsForPlayer(currentPlayer);
+
+  if(mandatoryJumps.length > 0) {
+    console.log(`Player ${currentPlayer} has ${mandatoryJumps.length} piece(s) that must jump`);
+  }
+}
 
 //can check any diagonal direction
 const getValidDiagonalSquare = (row, col, rowDelta, colDelta) => {
@@ -367,8 +426,12 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
   renderPieces();// re-render pieces
 
+  // switches turns
   currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
   renderTurnIndicator()
+
+  // checks for mandatory jumps for the new player
+  checkMandatoryJumps();
 }
 
 const checkForKingPromotion = (row, col) => {
@@ -507,11 +570,15 @@ function init() {
   currentPlayer = 1;
   selectedPiece = {row: null, col: null};
   gameOver = false;
+  mandatoryJumps = [];
 
   renderBoard(gameBoard);
   renderPieces();
 
-  renderTurnIndicator()
+  renderTurnIndicator();
+
+  // check for mandatory jumps at game start
+  checkMandatoryJumps();
 }
 
 
