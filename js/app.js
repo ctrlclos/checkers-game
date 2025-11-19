@@ -22,7 +22,7 @@ let gameOver = false;
 const gameBoard = document.getElementById('game-board');
 const turnIndicator = document.getElementById('player-turn');
 const errorMessage = document.getElementById('error-message');
-
+let validMoves = [];//stores current valid moves for a selected piece
 //Functions
 
 const renderBoard = (gameBoard) => {
@@ -115,6 +115,10 @@ const handleGameBoardClick = (event) => {
   }
   if(isValidCell(clickedSquare)){
     selectPiece(clickedSquare);
+    const row = Number(clickedSquare.getAttribute('data-row'));
+    const col = Number(clickedSquare.getAttribute('data-col'));
+    clearHighlights();
+    highlightValidMoves(getValidMoves(row, col));
   }
 }
 const selectPiece = (clickedSquare) => {
@@ -254,6 +258,34 @@ const isRowAndColValid = (row, col) => {
     return false;
   }
 }
+
+//Highlight Valid Moves
+const highlightValidMoves = (moves) => {
+  for(const [row, col] of moves) {
+    const element = document.querySelector(`.cell[data-col="${col}"][data-row="${row}"]`)
+    console.log(element)
+    if(element) {
+      element.classList.add('valid-move');
+      validMoves.push([row, col])
+      console.log(validMoves);
+    } else {
+      return;
+    }
+  }
+}
+
+const clearHighlights = (moves) => {
+  const highlightedCells = document.querySelectorAll(`.valid-move`);
+  for(cell of highlightedCells) {
+    cell.classList.remove('valid-move');
+  }
+  validMoves = []
+}
+//Implement Move Execution
+//Integrate Move Logic with Click Handler
+
+
+
 
 
 //Event listeners

@@ -81,6 +81,22 @@ button:focus,
 .cell.light { background-color: var(--board-light); }
 .cell.dark { background-color: var(--board-dark); }
 
+.valid-move {
+  box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.8);
+  border: 3px solid lime;
+  cursor: pointer;
+}
+
+/*subtle animation */
+.valid-move {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
 .cell {
   display: flex;
   justify-content: center;
@@ -99,6 +115,7 @@ button:focus,
   /*box-shadow: 0 0 0 5px #f1c40f;*/
   box-shadow: 0 0 15px 5px #f1c40f;
 }
+
 
 .piece.king {
   position: relative;
