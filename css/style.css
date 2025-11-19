@@ -102,6 +102,14 @@ button:focus,
   justify-content: center;
   align-items: center;
 }
+
+/* Jump move indicator - distinct from simple moves */
+.cell.valid-jump {
+  background-color: rgba(255, 100, 100, 0.4) !important;
+  border: 2px solid #ff6b6b;
+  box-shadow: 0 0 15px rgba(255, 100, 100, 0.6);
+}
+
 .piece {
   margin: auto;
   border-radius: 50%;

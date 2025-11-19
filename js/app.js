@@ -227,6 +227,7 @@ const getValidMoves = (row, col) => {
   if(!isRowAndColValid(row, col)) { return []; } // no valid moves
   const pieceOwner = getPieceOwner(row, col);
   const pieceIsKing = isKing(row, col);
+  // SIMPLE MOVES
   // determines valid directions based on piece type
   if(pieceIsKing) {
     directions = [
@@ -249,13 +250,23 @@ const getValidMoves = (row, col) => {
       [+1, +1]   // down-right
     ]
   }
-  //check each direction for valid moves
+  //check each direction for valid SIMPLE moves
   directions.forEach((direction) => {
     result = getValidDiagonalSquare(row, col, direction[0], direction[1]);
     if(result !== null) {
       validMoves.push(result);
     }
   })
+
+  //JUMP MOVES
+  // gets all valid jumps for this piece
+  const jumps = getValidJumps(row, col);
+  // adds jump to valid moves, jump format: [toRow, toCol, captureRow, captureCol]
+  // keeps full format for later use in executeMove
+  jumps.forEach((jump) => {
+    validMoves.push(jump);
+  });
+
   return validMoves;
 }
 
@@ -292,13 +303,21 @@ const isRowAndColValid = (row, col) => {
 
 //Highlight Valid Moves
 const highlightValidMoves = (moves) => {
-  for(const [row, col] of moves) {
+  for(const move of moves) {
+    const row = move[0];
+    const col = move[1];
+
     const element = document.querySelector(`.cell[data-col="${col}"][data-row="${row}"]`)
     console.log(element)
     if(element) {
-      element.classList.add('valid-move');
-      validMoves.push([row, col])
-      console.log(validMoves);
+      // checks if it is a jump (4 elements) or simple move 2 elements
+      if (move.length === 4) {
+        element.classList.add('valid-jump');
+      } else {
+        element.classList.add('valid-move');
+      }
+      validMoves.push(move)
+      //console.log(validMoves);
     } else {
       return;
     }
@@ -306,9 +325,10 @@ const highlightValidMoves = (moves) => {
 }
 
 const clearHighlights = (moves) => {
-  const highlightedCells = document.querySelectorAll(`.valid-move`);
+  const highlightedCells = document.querySelectorAll(`.valid-move, .valid-jump`);
   for(cell of highlightedCells) {
     cell.classList.remove('valid-move');
+    cell.classList.remove('valid-jump');
   }
   validMoves = []
 }
@@ -316,13 +336,37 @@ const clearHighlights = (moves) => {
 const executeMove = (fromRow, fromCol, toRow, toCol) => {
   //update board data
   const piece = board[fromRow][fromCol]; //get piece value from starting position
+
+  // Calculate the distance moved
+  const rowDistance = Math.abs(toRow - fromRow);
+  const colDistance = Math.abs(toCol - fromCol);
+
+  // DETECT IF THIS MOVE IS A JUMP
+  // jumps move 2 squares diagonally
+  const isJump = (rowDistance === 2 && colDistance === 2);
+
+  if(isJump) {
+    // Calculates which piece was jumped over
+    const capturedRow = (fromRow + toRow) / 2;
+    const capturedCol = (fromCol + toCol) / 2;
+
+    // Remove the captured piece from the board
+    board[capturedRow][capturedCol] = 0;
+
+  }
+
+  // EXECUTE THE MOVE
   board[toRow][toCol] = piece //place piece at the destination
   board[fromRow][fromCol] = 0 //clear the original position, makes square available
   checkForKingPromotion(toRow, toCol);//check for king promotion after the move
+
+  // UPDATE THE UI (user interface)
   selectedPiece = {row: null, col: null}; //clear selection state
   clearSelectedPieceHighlight()
   clearHighlights();
+
   renderPieces();// re-render pieces
+
   currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
   renderTurnIndicator()
 }
@@ -347,6 +391,82 @@ const isKing = (row, col) => {
   } else {
     return false;
   }
+}
+
+const isOpponent = (row, col, player) => {
+  const pieceOwner = getPieceOwner(row, col);
+  //if there is no piece (null) or its current player's piece return false
+  if(pieceOwner === null || pieceOwner === player) {
+    return false;
+  }
+  //returns true if it is the opponents piece
+  return true;
+}
+
+//calculates all valid jump moves for a piece
+const getValidJumps = (row, col) => {
+  const validJumps = [];
+
+  if (!isRowAndColValid(row, col)) {
+    return []
+  }
+
+  const pieceOwner = getPieceOwner(row, col);
+  const pieceIsKing = isKing(row, col);
+
+  //if no piece at this location, returns empty
+  if(pieceOwner === null) {
+    return [];
+  }
+
+  // determine directions to check based on piece type (regular or king)
+  let directions = []
+
+  if(pieceIsKing) {
+    // kings can jump in all 4 directions
+    directions = [
+      [-1, -1],  // up-left
+      [-1, +1],  // up-right
+      [+1, -1],  // down-left
+      [+1, +1]   // down-right
+    ]
+  } else if (pieceOwner === 1) {
+    // Player 1 regular pieces jump UP
+    directions = [
+      [-1, -1],  // up-left
+      [-1, +1]   // up-right
+    ];
+  } else if (pieceOwner === 2) {
+    // Player 2 regular pieces jump DOWN
+    directions = [
+      [+1, -1],  // down-left
+      [+1, +1]   // down-right
+    ];
+  }
+
+  // Check each direction for valid jumps
+  directions.forEach(([rowDelta, colDelta]) => {
+    // Position of adjacent square (potential opponent)
+    const adjRow = row + rowDelta;
+    const adjCol = col + colDelta;
+
+    // Position of landing square (2 squares away)
+    const landRow = row + (rowDelta * 2);
+    const landCol = col + (colDelta * 2);
+
+    if(
+      isRowAndColValid(adjRow, adjCol) &&
+      isOpponent(adjRow, adjCol, pieceOwner) &&
+      isRowAndColValid(landRow, landCol) &&
+      isSquareEmpty(landRow, landCol)
+    ) {
+      // Store jump as [destinationRow, destinationCol, capturedRow, capturedCol]
+      validJumps.push([landRow, landCol, adjRow, adjCol]);
+    }
+  });
+
+  return validJumps;
+
 }
 
 //Integrate Move Logic with Click Handler
