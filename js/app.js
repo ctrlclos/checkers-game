@@ -110,17 +110,57 @@ const handleGameBoardClick = (event) => {
   if(gameOver) return;
   let clickedSquare = (event.target);
 
+  // gets parent cell
   if(clickedSquare.classList.contains('piece')) {
     clickedSquare = clickedSquare.parentElement;
   }
-  if(isValidCell(clickedSquare)){
-    selectPiece(clickedSquare);
-    const row = Number(clickedSquare.getAttribute('data-row'));
-    const col = Number(clickedSquare.getAttribute('data-col'));
-    clearHighlights();
-    highlightValidMoves(getValidMoves(row, col));
+  // makes sure its a valid cell
+  if(!isValidCell(clickedSquare)) return;
+
+  const row = Number(clickedSquare.getAttribute('data-row'));
+  const col = Number(clickedSquare.getAttribute('data-col'));
+
+  // game state 1 - when no piece is selected
+  if(selectedPiece.row === null || selectedPiece.col === null) {
+    clearSelectedPieceHighlight(); // Clear any leftover highlights
+    const success = selectPiece(clickedSquare);
+
+    // checks if selection was successfull
+    if(success) {
+      addSelectedPieceHighlight(selectedPiece.row, selectedPiece.col);
+      clearHighlights();
+      const moves = getValidMoves(selectedPiece.row, selectedPiece.col);
+      highlightValidMoves(moves);
+    }
+  }
+  // game state 2 - piece already selected
+  else {
+    // checks if clicked square is valid destination
+    if(isValidDestination(row, col)) {
+      // executes the move
+      executeMove(selectedPiece.row, selectedPiece.col, row, col)
+    }
+    else if(board[row][col] === currentPlayer) { // checks if clicking a different piece of the same player
+      // switches selection to new piece
+      clearHighlights();
+      clearSelectedPieceHighlight()
+      selectPiece(clickedSquare);
+      addSelectedPieceHighlight(selectedPiece.row, selectedPiece.col)
+      if(selectedPiece.row !== null) {
+        const moves = getValidMoves(selectedPiece.row, selectedPiece.col);
+        highlightValidMoves(moves);
+      }
+    }
+    // Clicked somewhere invalid, deselect piece;
+    else {
+      selectedPiece = {row: null, col: null};
+      clearHighlights();
+      // clears yellow selected piece highlight too
+      clearSelectedPieceHighlight()
+    }
   }
 }
+
 const selectPiece = (clickedSquare) => {
   if(clickedSquare === null || clickedSquare === undefined) {
     return;
@@ -137,24 +177,16 @@ const selectPiece = (clickedSquare) => {
 
   const childSquare = clickedSquare.children[0]
 
-  if(selectedPiece.row === row && selectedPiece.col === col) {
-    toggleHighlight(selectedPiece);
-    selectedPiece = {row: null, col: null};
-    return;
-  }
-  if(selectedPiece.row !== null && selectedPiece.col !== null) {
-    toggleHighlight(selectedPiece);
-  }
-
   if(childSquare && isPieceClickable(childSquare)) {
     selectedPiece = {row: row, col: col}
-    toggleHighlight(selectedPiece)
+    return true;
   } else {
     if(!childSquare) {
       showErrorMessage('That square is empty. Please select one of your pieces.')
     } else if(!isPieceClickable(childSquare)) {
       showErrorMessage(`That's Player ${currentPlayer === 1 ? '2' : '1'}'s piece. Select your own piece.`);
     }
+    return false;
   }
 }
 
@@ -166,16 +198,6 @@ const isPieceClickable = (square) => {
     return false;
   }
 }
-
-const toggleHighlight = ((selectedPiece) => {
-  if(selectedPiece.row === null || selectedPiece.col === null) {return;}
-    const pieceElement = document.querySelector(`.piece[data-row="${selectedPiece.row}"][data-col="${selectedPiece.col}"]`)
-    if(pieceElement) {
-      console.log(getValidMoves(selectedPiece.row, selectedPiece.col))
-      pieceElement.classList.toggle('selected-piece')
-      return;
-    }
-})
 
 // checks if click target is a valid cell (in case user clicks outside)
 const isValidCell = (element) => {
@@ -282,10 +304,46 @@ const clearHighlights = (moves) => {
   validMoves = []
 }
 //Implement Move Execution
+const executeMove = (fromRow, fromCol, toRow, toCol) => {
+  //update board data
+  const piece = board[fromRow][fromCol]; //get piece value from starting position
+  board[toRow][toCol] = piece //place piece at the destination
+  board[fromRow][fromCol] = 0 //clear the original position, makes square available
+  selectedPiece = {row: null, col: null}; //clear selection state
+  clearSelectedPieceHighlight()
+  clearHighlights();
+  renderPieces();// re-render pieces
+  currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
+  renderTurnIndicator()
+}
+
 //Integrate Move Logic with Click Handler
+//state machine -> we have two states 1) no piece selected 2) piece already selected.
+//state 1) -> click should select piece, if valid
+//state 2) -> should either move to a valid destination or select a different piece or diselect the current piece.
+const isValidDestination = (row, col) => {
+  for(let move of validMoves) {
+    if(move[0] === row && move[1] === col) {
+      return true;
+    }
+  }
+  return false;
+}
 
+// removes yellow highlight from all pieces
+const clearSelectedPieceHighlight = () => {
+  const highlightedElements = document.querySelectorAll('.selected-piece');
+  highlightedElements.forEach((element) => {
+    element.classList.remove('selected-piece')
+  })
+}
 
-
+const addSelectedPieceHighlight = (row, col) => {
+  const selectedPieceElement = document.querySelector(`.piece[data-row="${row}"][data-col="${col}"]`);
+  if(selectedPieceElement) {
+    selectedPieceElement.classList.add('selected-piece');
+  }
+}
 
 
 //Event listeners
