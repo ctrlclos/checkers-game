@@ -225,31 +225,38 @@ const getValidMoves = (row, col) => {
   let directions = [];
   let result;
   if(!isRowAndColValid(row, col)) { return []; } // no valid moves
-    if(getPieceOwner(row, col) === 1) {
-        directions = [
-        [-1, -1],  // up-left
-        [-1, +1]   // up-right
-      ]
-      directions.forEach((direction) => {
-        result = getValidDiagonalSquare(row, col, direction[0], direction[1])
-        if(result!==null) {
-          validMoves.push(result)
-        }
-      })
-    }
-    else if(getPieceOwner(row, col) === 2) {
+  const pieceOwner = getPieceOwner(row, col);
+  const pieceIsKing = isKing(row, col);
+  // determines valid directions based on piece type
+  if(pieceIsKing) {
+    directions = [
+      //[row, col] -> kings moves in all 4 diagonal directions
+      [-1, -1],  //up-left
+      [-1, +1],  //up-right
+      [+1, -1],  //down-left
+      [+1, +1]   //down-right
+    ]
+  }
+  else if(pieceOwner === 1) {
       directions = [
-        [+1, -1],  // down-left
-        [+1, +1]   // down-right
-      ]
-      directions.forEach((direction) => {
-        result = getValidDiagonalSquare(row, col, direction[0], direction[1])
-        if(result!==null) {
-          validMoves.push(result)
-        }
-      })
+      [-1, -1],  // up-left
+      [-1, +1]   // up-right
+    ]
+  }
+  else if(pieceOwner === 2) {
+    directions = [
+      [+1, -1],  // down-left
+      [+1, +1]   // down-right
+    ]
+  }
+  //check each direction for valid moves
+  directions.forEach((direction) => {
+    result = getValidDiagonalSquare(row, col, direction[0], direction[1]);
+    if(result !== null) {
+      validMoves.push(result);
     }
-    return validMoves;
+  })
+  return validMoves;
 }
 
 
@@ -266,11 +273,13 @@ const getValidDiagonalSquare = (row, col, rowDelta, colDelta) => {
 }
 
 const getPieceOwner = (row, col) => {
-  if(board[row][col] === 1) {
+  if(board[row][col] === 1 || board[row][col] === 3) {//player 2 (regular piece, king)
     return 1;
-  } else if(board[row][col] === 2) {
+  }
+  else if(board[row][col] === 2 || board[row][col] === 4) { //player 2 (regular piece, king)
     return 2;
   }
+  return null; // now owner, empty square
 }
 
 const isRowAndColValid = (row, col) => {
@@ -309,12 +318,35 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
   const piece = board[fromRow][fromCol]; //get piece value from starting position
   board[toRow][toCol] = piece //place piece at the destination
   board[fromRow][fromCol] = 0 //clear the original position, makes square available
+  checkForKingPromotion(toRow, toCol);//check for king promotion after the move
   selectedPiece = {row: null, col: null}; //clear selection state
   clearSelectedPieceHighlight()
   clearHighlights();
   renderPieces();// re-render pieces
   currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
   renderTurnIndicator()
+}
+
+const checkForKingPromotion = (row, col) => {
+  const pieceValue = board[row][col]
+  if(pieceValue === 1 && row === 0) {
+    board[row][col] = 3;
+    return true;
+
+  } else if(pieceValue === 2 && row === 7) {
+    board[row][col] = 4;
+    return true;
+  }
+  return false;
+}
+
+const isKing = (row, col) => {
+  const pieceValue = board[row][col];
+  if(pieceValue === 3 || pieceValue === 4) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 //Integrate Move Logic with Click Handler
@@ -361,7 +393,6 @@ function init() {
 
   renderTurnIndicator()
 }
-
 
 
 // Call init when the dom is ready
