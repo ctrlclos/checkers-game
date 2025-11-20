@@ -14,7 +14,14 @@
       <div id="player-turn" aria-live="polite">Player 1 turn</div>
       <div id="game-board" role="grid" aria-label="Checkers board">
       </div>
-      <button id="reset-game" aria-label="Reset game">Reset Game</button>
+
+      <div id="game-over-overlay" class="hidden">
+        <div id="game-over-content">
+          <h2 id="game-over-title">Game over</h2>
+          <p id="game-over-message">Player 1 wins</p>
+          <button id="reset-button" aria-label="Play Again">Play Again</button>
+        </div>
+      </div>
     </div>
   </body>
 </html>

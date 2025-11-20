@@ -25,6 +25,11 @@ let multiJumpPiece = {row:null, col: null}; // piece that is multi-jumping
 const gameBoard = document.getElementById('game-board');
 const turnIndicator = document.getElementById('player-turn');
 const errorMessage = document.getElementById('error-message');
+// game over elements
+const gameOverOverlay = document.getElementById('game-over-overlay');
+const gameOverMessage = document.getElementById('game-over-message');
+const resetButton = document.getElementById('reset-button');
+
 let validMoves = [];//stores current valid moves for a selected piece
 //Functions
 
@@ -127,7 +132,11 @@ const renderTurnIndicator = () => {
 //identifies which square was clicked
 // extracts row and col for clicked square
 const handleGameBoardClick = (event) => {
-  if(gameOver) return;
+  if(gameOver) {
+    console.log('Game is over! Please click "Play Again" to start a new game.');
+    return;//exit early, no iteractions allowed.
+  };
+
   let clickedSquare = (event.target);
 
   // gets parent cell
@@ -358,6 +367,115 @@ const checkMandatoryJumps = () => {
   }
 }
 
+// counts the number of pieces the player has on the board
+// regular pieces and kings
+const countPieces = (player) => {
+  let count = 0;
+
+  // iterate through the entire board
+  for(row = 0; row < 8; row++) {
+    for(col = 0; col < 8; col++) {
+      const pieceOwner = getPieceOwner(row, col);
+
+      if(pieceOwner === player) {// increment count if piece belongs to the player
+        count++;
+      }
+    }
+  }
+
+  return count;
+}
+
+//checks if current player has any valid moves (simple moves or jumps)
+const hasValidMoves = (player) => {
+ for(row = 0; row < 8; row++) {
+  for(col = 0; col < 8; col++) {
+    const pieceOwner = getPieceOwner(row, col);
+
+    if(pieceOwner === player) {
+      const moves = getValidMoves(row, col);
+
+      if(moves.length > 0) {
+        return true;
+      }
+    }
+  }
+ }
+ return false;
+}
+
+const checkWinCondition = () => {
+  // get the opponent (the player that will move next)
+  const opponent = currentPlayer;
+
+  //check win condition 1 - opponent has no pieces left
+  const opponentPieceCount = countPieces(opponent);
+
+  if(opponentPieceCount === 0) {
+    // opponent has no pieces, previous player wins
+    const winner = (opponent === 1) ? 2 : 1;
+    return winner;
+  }
+
+  // check win condition 2 - opponent has no valid moves (stalemate)
+  const opponentHasMoves = hasValidMoves(opponent);
+
+  if(!opponentHasMoves) {
+    // opponent cannot move -> previous player wins
+    const winner = (opponent === 1) ? 2 : 1;
+    return winner;
+  }
+
+  // no win condition met - game continues
+  return null;
+}
+
+const displayGameOver = (winner) => {
+  gameOver = true;
+  gameOverMessage.innerText = `Player ${winner} wins! 🎉`;
+  gameOverOverlay.classList.remove('hidden');
+  console.log(`Game Over! Player ${winner} wins!`);
+}
+
+const resetGame = () => {
+  // Reset all state variables
+  currentPlayer = 1;
+  selectedPiece = {row: null, col: null};
+  gameOver = false;
+  mandatoryJumps = [];
+  isMultiJumping = false;
+  multiJumpPiece = {row: null, col: null};
+  validMoves = [];
+
+  // Reset board to starting position
+  board = [
+    [0, 2, 0, 2, 0, 2, 0, 2], // Row 0
+    [2, 0, 2, 0, 2, 0, 2, 0], // Row 1
+    [0, 2, 0, 2, 0, 2, 0, 2], // Row 2
+    [0, 0, 0, 0, 0, 0, 0, 0], // Row 3
+    [0, 0, 0, 0, 0, 0, 0, 0], // Row 4
+    [1, 0, 1, 0, 1, 0, 1, 0], // Row 5
+    [0, 1, 0, 1, 0, 1, 0, 1], // Row 6
+    [1, 0, 1, 0, 1, 0, 1, 0]  // Row 7
+  ];
+
+  // Hide game over overlay
+  gameOverOverlay.classList.add('hidden');
+
+  // Clear any highlights
+  clearHighlights();
+  clearSelectedPieceHighlight();
+
+  // Re-render the board
+  renderPieces();
+  renderTurnIndicator();
+
+  // Check for mandatory jumps (unlikely at start, but good practice)
+  checkMandatoryJumps();
+
+  console.log('Game reset! Starting new game.');
+}
+
 //can check any diagonal direction
 const getValidDiagonalSquare = (row, col, rowDelta, colDelta) => {
   let newRow = row + rowDelta;//getting adjacent row
@@ -480,13 +598,20 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
   // turn end -> no multi-jump or multi-jump completed
   selectedPiece = {row: null, col: null};
-
   // switches turns
   currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
+
   renderTurnIndicator()
 
   // checks for mandatory jumps for the new player
   checkMandatoryJumps();
+
+  // check for win condition after turn switch
+  const winner = checkWinCondition();
+  if(winner !== null) {
+    displayGameOver(winner);
+    return; //Exit - game is over;
+  }
 }
 
 const checkForKingPromotion = (row, col) => {
@@ -628,8 +753,8 @@ const addSelectedPieceHighlight = (row, col) => {
 
 
 //Event listeners
-gameBoard.addEventListener("click", handleGameBoardClick)
-
+gameBoard.addEventListener("click", handleGameBoardClick);
+resetButton.addEventListener("click", resetGame);
 // init() initializes the game.
 function init() {
   // sets the inital game state
