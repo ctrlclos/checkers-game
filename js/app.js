@@ -20,6 +20,7 @@ let gameOver = false;
 let mandatoryJumps = []; // pieces that must jump
 let isMultiJumping = false; // true -> multi-jump in progress
 let multiJumpPiece = {row:null, col: null}; // piece that is multi-jumping
+let movesSinceCapture = 0;
 
 //Cached elements references
 const gameBoard = document.getElementById('game-board');
@@ -430,11 +431,21 @@ const checkWinCondition = () => {
   return null;
 }
 
-const displayGameOver = (winner) => {
+const checkDrawCondition = () => {
+  // checks if it's a draw/tie
+  return movesSinceCapture >= 40 ? true : false
+}
+
+const displayGameOver = (result) => {
   gameOver = true;
-  gameOverMessage.innerText = `Player ${winner} wins! 🎉`;
-  gameOverOverlay.classList.remove('hidden');
-  console.log(`Game Over! Player ${winner} wins!`);
+  if(result === 'draw') {
+    gameOverMessage.innerText = "Game Drawn - 40 moves without capture! 🤝";
+    gameOverOverlay.classList.remove('hidden');
+  } else {//we have a winner
+    gameOverMessage.innerText = `Player ${result} wins! 🎉`;
+    gameOverOverlay.classList.remove('hidden');
+    console.log(`Game Over! Player ${result} wins!`);
+  }
 }
 
 const resetGame = () => {
@@ -446,6 +457,7 @@ const resetGame = () => {
   isMultiJumping = false;
   multiJumpPiece = {row: null, col: null};
   validMoves = [];
+  movesSinceCapture = 0;
 
   // Reset board to starting position
   board = [
@@ -557,7 +569,7 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
     // Remove the captured piece from the board
     board[capturedRow][capturedCol] = 0;
-
+    movesSinceCapture = 0; // a capture just occured, "moves without capture" streak is broken.
   }
 
   // EXECUTE THE MOVE
@@ -572,9 +584,16 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
   renderPieces();// re-render pieces
 
+  // increment counter by 1 for non-capture moves
+  // reset to 0 inside isJump if this move was a jump instead.
+  // every move is counted, capture resets the count
+  movesSinceCapture = movesSinceCapture + 1;
+
   if (isJump) {
     //check if piece can jump again from its new position
     const consecutiveJumps = checkForConsecutiveJump(toRow, toCol);
+
+    movesSinceCapture = 0; // capture resets the count
 
     if(consecutiveJumps.length > 0) {
       // set multi-jump state
@@ -608,9 +627,14 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
   // check for win condition after turn switch
   const winner = checkWinCondition();
+  const draw = checkDrawCondition();
   if(winner !== null) {
     displayGameOver(winner);
     return; //Exit - game is over;
+  }
+  if(draw) {
+    displayGameOver('draw');
+    return;// Exit - game is over
   }
 }
 
@@ -765,6 +789,8 @@ function init() {
 
   isMultiJumping = false;
   multiJumpPiece = {row: null, col: null};
+
+  movesSinceCapture = 0;
 
   renderBoard(gameBoard);
   renderPieces();
