@@ -18,6 +18,8 @@ let currentPlayer = 1; // 1-> player-1, 2 -> player-2
 let selectedPiece = {row: null, col: null};
 let gameOver = false;
 let mandatoryJumps = []; // pieces that must jump
+let isMultiJumping = false; // true -> multi-jump in progress
+let multiJumpPiece = {row:null, col: null}; // piece that is multi-jumping
 
 //Cached elements references
 const gameBoard = document.getElementById('game-board');
@@ -102,14 +104,23 @@ const clearBoard = () => {
 }
 
 const renderTurnIndicator = () => {
-  if(mandatoryJumps.length > 0) {
+  //show multi-jumping status
+  if (isMultiJumping) {
+    turnIndicator.innerText = `Player ${currentPlayer} - MULTI-JUMP IN PROGRESS!`;
+    turnIndicator.style.color = '#ff6b6b';
+    turnIndicator.style.fontWeight = 'bold';
+    turnIndicator.style.fontSize = '1.2em'; // Slightly larger
+  }
+  else if(mandatoryJumps.length > 0) {
     turnIndicator.innerText = `Player ${currentPlayer} turn - MUST JUMP!`;
     turnIndicator.style.color = '#ff6b6b'; //red color
     turnIndicator.style.fontWeight = 'bold';
+    turnIndicator.style.fontSize = '';
   } else { // resets to default style
     turnIndicator.innerText = `Player ${currentPlayer} turn`;
     turnIndicator.style.color = '';
     turnIndicator.style.fontWeight = '';
+    turnIndicator.style.fontSize = '';
   }
 }
 
@@ -129,6 +140,23 @@ const handleGameBoardClick = (event) => {
   const row = Number(clickedSquare.getAttribute('data-row'));
   const col = Number(clickedSquare.getAttribute('data-col'));
 
+  // multi-jump mode check
+  if (isMultiJumping) {
+    // only allow clicking valid jump destinations
+    // cannot select other pieces or deselect current piece
+
+    if(isValidDestination(row, col)) {
+      // valid consecutive jump destination; execute it
+      executeMove(multiJumpPiece.row, multiJumpPiece.col, row, col)
+    } else {
+      //invalid click during multi jump
+      showErrorMessage(
+        'You must complete the multi-jump! Click a highlighted square.',
+        3000);
+    }
+    return; // Exit early, don't allow normal piece selection.
+  }
+  // NORMAL GAME STATE - no multi-jump in progress
   // game state 1 - when no piece is selected
   if(selectedPiece.row === null || selectedPiece.col === null) {
     clearSelectedPieceHighlight(); // Clear any leftover highlights
@@ -426,6 +454,33 @@ const executeMove = (fromRow, fromCol, toRow, toCol) => {
 
   renderPieces();// re-render pieces
 
+  if (isJump) {
+    //check if piece can jump again from its new position
+    const consecutiveJumps = checkForConsecutiveJump(toRow, toCol);
+
+    if(consecutiveJumps.length > 0) {
+      // set multi-jump state
+      isMultiJumping = true;
+      multiJumpPiece = {row: toRow, col: toCol};
+
+      selectedPiece = {row: toRow, col: toCol};// keep piece selected at its new position
+
+      addSelectedPieceHighlight(toRow, toCol);//highlight piece at its new position
+      highlightValidMoves(consecutiveJumps);//show oly consecutive jump options highlighted
+
+      renderTurnIndicator();//update turn indicator -> show multi-jump in progress
+
+      return;// not turn switch, exit early
+    } else {
+      // no more consecutive jumps? -> ends multi-jump if it was active
+      isMultiJumping = false;
+      multiJumpPiece = {row: null, col: null};
+    }
+ }
+
+  // turn end -> no multi-jump or multi-jump completed
+  selectedPiece = {row: null, col: null};
+
   // switches turns
   currentPlayer = (currentPlayer === 1) ? 2 : 1; // switches turns
   renderTurnIndicator()
@@ -532,6 +587,17 @@ const getValidJumps = (row, col) => {
 
 }
 
+const checkForConsecutiveJump = (row, col) => {
+  // get all valid jumps from the current position
+  const consecutiveJumps = getValidJumps(row, col);
+
+  if(consecutiveJumps.length > 0) {
+    console.log(`Consecutive jump available at [${row},${col}]! Found ${consecutiveJumps.length} jump(s)`);
+  }
+
+  return consecutiveJumps;
+}
+
 //Integrate Move Logic with Click Handler
 //state machine -> we have two states 1) no piece selected 2) piece already selected.
 //state 1) -> click should select piece, if valid
@@ -571,6 +637,9 @@ function init() {
   selectedPiece = {row: null, col: null};
   gameOver = false;
   mandatoryJumps = [];
+
+  isMultiJumping = false;
+  multiJumpPiece = {row: null, col: null};
 
   renderBoard(gameBoard);
   renderPieces();
