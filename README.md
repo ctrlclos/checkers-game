@@ -13,7 +13,7 @@ A fully functional American/English Checkers game built with vanilla JavaScript,
 2. Open `index.html` in your web browser
 3. Click on a piece to select it (it will be outlined in blue)
 4. Click on a highlighted square to move
-5. Green squares = possible moves | Orange squares = mandatory jumps
+5. Blue squares = possible moves | Orange squares = mandatory jumps
 
 ## 📖 How to Play
 
