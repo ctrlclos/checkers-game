@@ -7,8 +7,7 @@ A fully functional American/English Checkers game built with vanilla JavaScript,
 ## 🎮 Getting Started
 
 ### Play the Game
-> **Deployment Status:** The game is currently pending deployment to GitHub Pages. Once deployed, a live link will be available here.
-
+> **Deployment Link:** https://ctrlclos.github.io/checkers-game/
 ### Run Locally
 1. Clone this repository
 2. Open `index.html` in your web browser
