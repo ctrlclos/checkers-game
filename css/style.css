@@ -1,176 +1,190 @@
-/*Basic resent - this removes inconcistent browser default styles*/
+/* CHECKERS GAME - STYLESHEET
+   A clean, organized stylesheet for the checkers game
+   Sections:
+   1. CSS Reset & Base Styles
+   2. CSS Variables
+   3. Layout & Container
+   4. Game Board
+   5. Board Cells
+   6. Game Pieces
+   7. UI Elements
+   8. Instructions Section
+   9. Game Over Message
+   10. Responsive Design */
+
+/* 1. CSS RESET & BASE STYLES */
+
+/* Remove browser default margins and paddings for consistency across browsers */
 * {
   margin: 0;
   padding: 0;
-  /*this makes width/height include padding/border.*/
-  box-sizing: border-box;
+  box-sizing: border-box; /* Make width/height include padding and border */
 }
 
+/* Base body styling */
 body {
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
 }
 
+/* Main heading style */
 h1 {
   text-align: center;
   color: #333;
   font-size: 2rem;
 }
 
-/*CSS variables - can be used everywhere*/
-:root {
-  /*Colors*/
-  --color-primary: #8b4513;
-  --color-secondary: #f5deb3;
-  /*Spacing*/
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --board-light: #e8e8e8;
-  --board-dark: #555555;
-}
-
-/*Using the variables with var()*/
-#game-board {
-  display: grid;
-  /*creates 8 equal columns*/
-  grid-template-columns: repeat(8, 1fr);
-  /*creates 8 equal rows*/
-  grid-template-rows: repeat(8, 1fr);
-  /*no space between cells*/
-  gap: 0;
-  /*ensures square board*/
-  aspect-ratio: 1;
-  background: var(--color-primary);
-  padding: var(--spacing-md);
-  border-radius: 4px;
-}
-
-#container {
-  max-width: 1200px;
-  margin: 0 auto; /*centers the content*/
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-  justify-content: center;
-}
-
-/*Responsive Design*/
-/*Mobile First*/
-#game-board {
-  width: 100%;
-  max-width: 500px; /*limits size on larger screens.*/
-}
-/*Tablet and up screens*/
-@media (min-width: 768px) {
-  #game-board {
-    max-width: 600px;
-    width: 100%;
-  }
-}
-
-/* Visible focus indicators */
+/* Visible focus indicators for accessibility */
 button:focus,
 .square:focus {
   outline: 3px solid #005fcc;
   outline-offset: 2px;
 }
 
-/*Cell colors*/
-.cell.light { background-color: var(--board-light); }
-.cell.dark { background-color: var(--board-dark); }
+/* 2. CSS VARIABLES (DESIGN TOKENS)
+   Centralized color and spacing values for easy theme customization */
 
-.valid-move {
-  box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.8);
-  border: 3px solid lime;
-  cursor: pointer;
+:root {
+  --color-primary: #8b4513; /* Brown border around board */
+  --board-light: #e8e8e8; /* Light gray squares */
+  --board-dark: #444444; /* Dark gray squares - improved contrast */
+  --spacing-sm: 8px; /* Small spacing */
+  --spacing-md: 16px; /* Medium spacing */
 }
 
-/*subtle animation */
-.valid-move {
-  animation: pulse 1.5s infinite;
+/* 3. LAYOUT & CONTAINER
+   Main container that centers and holds all game elements */
+
+#container {
+  max-width: 1200px;
+  margin: 0 auto; /* Center horizontally */
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center; /* Center items horizontally */
+  gap: var(--spacing-md); /* Space between child elements */
+  justify-content: center;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+/* 4. GAME BOARD
+   The 8x8 checkerboard grid */
+
+#game-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* 8 equal-width columns */
+  grid-template-rows: repeat(8, 1fr); /* 8 equal-height rows */
+  gap: 0; /* No space between cells */
+  aspect-ratio: 1; /* Keep board perfectly square */
+  background: var(--color-primary); /* Brown border/frame */
+  padding: var(--spacing-md);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 500px; /* Default max size (mobile) */
 }
 
+/* 5. BOARD CELLS
+   Individual squares on the checkerboard */
+
+/* Base cell styling - centers pieces inside */
 .cell {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Jump move indicator - distinct from simple moves */
-.cell.valid-jump {
-  background-color: rgba(255, 100, 100, 0.4) !important;
-  border: 2px solid #ff6b6b;
-  box-shadow: 0 0 15px rgba(255, 100, 100, 0.6);
+/* Alternating light and dark squares */
+.cell.light {
+  background-color: var(--board-light);
 }
 
+.cell.dark {
+  background-color: var(--board-dark);
+}
+
+/* Valid simple move indicator (solid green) */
+.cell.valid-move {
+  background-color: #28a745 !important; /* Solid green for possible moves */
+  border: 2px solid #1e7e34; /* Darker green border */
+  cursor: pointer;
+}
+
+/* Valid jump move indicator (solid orange - more urgent than simple moves) */
+.cell.valid-jump {
+  background-color: #fd7e14 !important; /* Solid orange for mandatory jumps */
+  border: 2px solid #dc6502; /* Darker orange border */
+  cursor: pointer;
+}
+
+/* 6. GAME PIECES
+   Checker pieces for both players and kings */
+
+/* Base piece styling - circular with clean design */
 .piece {
   margin: auto;
-  border-radius: 50%;
-  width: 80%;
+  border-radius: 50%; /* Make circular */
+  width: 80%; /* Slightly smaller than cell */
   height: 80%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
-  border: 1px solid rgba(0,0,0,0.1);
 }
 
+/* Player 1 pieces - Red */
+.piece.player-1 {
+  background-color: #dc3545; /* Brighter red for better contrast */
+  border: 2px solid #721c24; /* Dark red border for definition */
+}
+
+/* Player 2 pieces - White/Off-white */
+.piece.player-2 {
+  background-color: #f8f9fa; /* Light gray/white */
+  border: 2px solid #dee2e6; /* Light gray border for definition */
+}
+
+/* Selected piece indicator - solid blue outline */
 .piece.selected-piece {
-  /*box-shadow: 0 0 0 5px #f1c40f;*/
-  box-shadow: 0 0 15px 5px #f1c40f;
+  outline: 4px solid #0066cc; /* Solid blue outline */
+  outline-offset: 2px; /* Small gap between piece and outline */
 }
 
-
+/* King pieces - position relative to allow crown symbol */
 .piece.king {
   position: relative;
 }
 
-/* Player 1 king styling */
+/* Player 1 King - Gold border and crown */
 .piece.player-1.king {
-  border: 2px solid #ffd700;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.3);
+  border: 3px solid #ffd700; /* Gold border */
 }
 
+/* Player 1 King crown symbol */
 .piece.player-1.king::before {
-  content: '♔';
+  content: '♔'; /* Unicode crown character U+2654*/
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); /* Center perfectly */
   font-size: 2rem;
-  color: #ffed4e;
-  text-shadow: 0 2px 3px rgba(0,0,0,0.7);
+  color: #ffd700; /* Gold color */
 }
 
-/* Player 2 king styling */
+/* Player 2 King - Dark border and crown */
 .piece.player-2.king {
-  border: 2px solid #333;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.3);
+  border: 3px solid #333; /* Dark border */
 }
 
+/* Player 2 King crown symbol */
 .piece.player-2.king::before {
-  content: '♔';
+  content: '♔'; /* Unicode crown character */
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); /* Center perfectly */
   font-size: 2rem;
-  color: #1a1a1a;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+  color: #1a1a1a; /* Very dark gray */
 }
 
-.player-1 {
-  background-color: #c41e3a;
-}
+/* 7. UI ELEMENTS
+   Game information displays (turn indicator, error messages) */
 
-.player-2 {
-  background-color: #f5f5f5;
-}
-
+/* Turn indicator - shows whose turn it is */
 #player-turn {
   font-size: 1.2rem;
   font-weight: bold;
@@ -179,82 +193,136 @@ button:focus,
   padding: var(--spacing-sm);
 }
 
-/* game over overlay */
-#game-over-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-in;
+/* Instructions button and AI toggle button */
+#instructions-button,
+#ai-toggle-button {
+  background-color: #0066cc; /* Darker blue for WCAG AA compliance */
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: var(--spacing-sm);
 }
 
-#game-over-overlay.hidden {
+#instructions-button:hover,
+#ai-toggle-button:hover {
+  background-color: #0052a3; /* Darker blue */
+}
+
+#instructions-button:active,
+#ai-toggle-button:active {
+  background-color: #003d7a; /* Even darker blue */
+}
+
+/* 8. INSTRUCTIONS SECTION
+   Inline instructions section */
+
+/* Instructions section container */
+#instructions-section {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  border: 3px solid #0066cc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: var(--spacing-md) 0;
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Hidden state for instructions */
+#instructions-section.hidden {
   display: none;
 }
 
-#game-over-content {
-  background-color: white;
-  padding: 40px;
-  border-radius: 15px;
+#instructions-section h2 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 20px;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.4s ease-out;
+  font-size: 1.8em;
 }
 
-#game-over-title {
-  font-size: 2.5em;
+#instructions-section h3 {
+  color: #0066cc; /* Darker blue for WCAG AA compliance */
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 1.3em;
+}
+
+#instructions-section ul {
+  margin-left: 20px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+#instructions-section li {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+#instructions-section strong {
+  color: #333;
+}
+
+/* 9. GAME OVER MESSAGE
+   Inline message shown when game ends */
+
+/* Game over message container */
+#game-over-message {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  border: 3px solid #333;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: var(--spacing-md) 0;
+}
+
+/* Hidden state for message */
+#game-over-message.hidden {
+  display: none;
+}
+
+/* Winner/draw message text */
+#game-result-text {
+  font-size: 1.5em;
+  font-weight: bold;
   margin: 0 0 20px 0;
   color: #333;
 }
 
-#game-over-message {
-  font-size: 1.5em;
-  margin: 0 0 30px 0;
-  color: #666;
-}
-
+/* Reset/Play Again button */
 #reset-button {
-  background-color: #4caf50;
+  background-color: #2e7d32; /* Darker green for WCAG AA compliance */
   color: white;
   border: none;
   padding: 15px 40px;
   font-size: 1.2em;
+  font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
+/* Reset button hover effect */
 #reset-button:hover {
-  background-color: #45a049;
-  transform: scale(1.05);
+  background-color: #1b5e20; /* Darker green */
 }
 
+/* Reset button click effect */
 #reset-button:active {
-  transform: scale(0.95);
+  background-color: #0d3e10; /* Even darker green */
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* 10. RESPONSIVE DESIGN
+   Adjustments for different screen sizes */
 
-@keyframes slideIn {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+/* Tablet and larger screens (768px and up) */
+@media (min-width: 768px) {
+  #game-board {
+    max-width: 600px; /* Larger board on bigger screens */
+    width: 100%;
   }
 }

@@ -8,20 +8,56 @@
     <script src="js/app.js" defer></script>
   </head>
   <body>
-    <div id="container">
+    <main id="container" role="main">
       <h1>Checkers Game</h1>
-      <div id="error-message"></div>
-      <div id="player-turn" aria-live="polite">Player 1 turn</div>
-      <div id="game-board" role="grid" aria-label="Checkers board">
+      <button id="instructions-button" aria-label="Toggle How to Play">How to Play</button>
+      <button id="ai-toggle-button" aria-label="Toggle AI Opponent">AI: ON</button>
+      <div id="error-message" role="alert" aria-live="assertive"></div>
+
+      <!-- Instructions Section -->
+      <div id="instructions-section" class="hidden" role="region" aria-labelledby="instructions-title">
+        <h2 id="instructions-title">How to Play Checkers</h2>
+
+        <h3>Basic Movement</h3>
+        <ul>
+          <li>Click a piece to select it (it will highlight in blue)</li>
+          <li>Click a highlighted square to move there</li>
+          <li>Regular pieces move diagonally forward one square</li>
+          <li>Reach the opposite end to become a King ♔</li>
+        </ul>
+
+        <h3>Kings</h3>
+        <ul>
+          <li>Kings can move diagonally in any direction (forward or backward)</li>
+          <li>Kings are marked with a crown symbol ♔</li>
+        </ul>
+
+        <h3>Capturing</h3>
+        <ul>
+          <li>Jump over an opponent's piece to capture it</li>
+          <li>The captured piece is removed from the board</li>
+          <li>You can capture multiple pieces in one turn (multi-jump)</li>
+        </ul>
+
+        <h3>Important Rules</h3>
+        <ul>
+          <li><strong>Mandatory Jumps:</strong> If a jump is available, you MUST take it</li>
+          <li><strong>Multi-Jump:</strong> If you can jump again after a capture, you must continue</li>
+          <li><strong>Win Condition:</strong> Capture all opponent pieces or block their moves</li>
+          <li><strong>Draw:</strong> Game ends in a draw after 40 moves without a capture</li>
+        </ul>
       </div>
 
-      <div id="game-over-overlay" class="hidden">
-        <div id="game-over-content">
-          <h2 id="game-over-title">Game over</h2>
-          <p id="game-over-message">Player 1 wins</p>
-          <button id="reset-button" aria-label="Play Again">Play Again</button>
-        </div>
+      <div id="player-turn" role="status" aria-live="polite" aria-atomic="true">Player 1 turn</div>
+
+      <!-- Game Over Message -->
+      <div id="game-over-message" class="hidden" role="status" aria-live="polite">
+        <p id="game-result-text">Player 1 wins! 🎉</p>
+        <button id="reset-button" aria-label="Play Again">Play Again</button>
       </div>
-    </div>
+
+      <div id="game-board" role="grid" aria-label="Checkers board">
+      </div>
+    </main>
   </body>
 </html>
