@@ -103,8 +103,8 @@ button:focus,
 
 /* Valid simple move indicator (solid green) */
 .cell.valid-move {
-  background-color: #28a745 !important; /* Solid green for possible moves */
-  border: 2px solid #1e7e34; /* Darker green border */
+  background-color: #007bff !important; /* Solid blue for possible moves */
+  border: 2px solid #0056b3; /* Darker blue border */
   cursor: pointer;
 }
 
