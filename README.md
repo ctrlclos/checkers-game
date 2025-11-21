@@ -51,7 +51,6 @@ A fully functional American/English Checkers game built with vanilla JavaScript,
 ### Accessibility & Quality
 - ✅ WCAG 2.0 AA compliant (color contrast, ARIA labels, semantic HTML)
 - ✅ No distracting animations (accessibility-first design)
-- ✅ Keyboard-accessible controls
 - ✅ Screen reader support with proper ARIA attributes
 - ✅ Clean, professional UI with solid colors
 - ✅ Responsive design for different screen sizes
